@@ -99,8 +99,17 @@ describe("SlotPicker", () => {
     // At least one slot should be disabled (overlap with the wide busy interval)
     expect(disabledButtons.length).toBeGreaterThan(0);
 
-    // Clicking a disabled button should NOT call onSelect
-    disabledButtons[0].click();
+    const busyButton = disabledButtons[0];
+
+    // Assert the button is marked disabled in the DOM so the UI correctly
+    // communicates unavailability to assistive technology.
+    expect(busyButton).toBeDisabled();
+
+    // Use .click() directly rather than userEvent because userEvent v14+ has an
+    // internal pointer-delay that conflicts with vi.useFakeTimers(), causing
+    // the click to hang.  The component guards onSelect behind !busy, so the
+    // native .click() is sufficient to verify the guard holds.
+    busyButton.click();
     expect(onSelect).not.toHaveBeenCalled();
   });
 

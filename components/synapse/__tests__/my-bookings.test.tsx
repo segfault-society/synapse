@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 import { MyBookings } from "@/components/synapse/my-bookings";
@@ -156,9 +156,16 @@ describe("MyBookings", () => {
     render(<MyBookings />);
     await act(async () => {});
 
-    expect(screen.getByText("Meeting Room A")).toBeInTheDocument();
-    // The booking status badge should be visible
-    expect(screen.getByText("confirmed")).toBeInTheDocument();
+    const resourceHeading = screen.getByText("Meeting Room A");
+    expect(resourceHeading).toBeInTheDocument();
+
+    // Scope the badge lookup to the booking card that contains the resource name
+    // so a stray "confirmed" string elsewhere in the DOM can't produce a false
+    // positive.  shadcn Card renders as div[data-slot="card"].
+    const card = resourceHeading.closest('[data-slot="card"]') as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(within(card).getByText("confirmed")).toBeInTheDocument();
+
     // formatSlot produces something like "Fri, 1 Jan 2027 · 10:00–11:00" (en-AU)
     // Verify the slot text is rendered (not "Unknown time")
     expect(screen.queryByText("Unknown time")).not.toBeInTheDocument();
@@ -238,11 +245,17 @@ describe("MyBookings", () => {
 
     const user = userEvent.setup();
 
-    // The first booking card has a SwapSelect with the other booking as option
-    // Find the first combobox (Select trigger in first booking's SwapSelect)
-    const combos = screen.getAllByRole("combobox");
+    // Scope the combobox lookup to booking1's card by finding the "Meeting Room A"
+    // heading and walking up to its card container.  This avoids fragile DOM-order
+    // indexing (getAllByRole("combobox")[0]) which would break if card order changes.
+    // shadcn Card renders as div[data-slot="card"].
+    const booking1Heading = screen.getByText("Meeting Room A");
+    const booking1Card = booking1Heading.closest('[data-slot="card"]') as HTMLElement;
+    expect(booking1Card).not.toBeNull();
+    const booking1Combo = within(booking1Card).getByRole("combobox");
+
     // First booking's SwapSelect should have booking2 as option
-    await user.click(combos[0]);
+    await user.click(booking1Combo);
 
     // Wait for Radix Select dropdown to open and find the option for booking2
     const option = await screen.findByRole("option", {

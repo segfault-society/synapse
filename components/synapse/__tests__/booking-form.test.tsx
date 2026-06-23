@@ -133,16 +133,26 @@ describe("BookingForm", () => {
     expect(mockRpc).toHaveBeenCalledTimes(1);
     const [rpcName, rpcArgs] = mockRpc.mock.calls[0];
     expect(rpcName).toBe("book_request");
-    expect(rpcArgs).toMatchObject({
+
+    // p_request_id should be a UUID — check it separately before using
+    // toStrictEqual so we can match the pattern without hardcoding the value.
+    expect(rpcArgs.p_request_id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+
+    // Use toStrictEqual (full match) to catch unexpected extra fields and to
+    // explicitly verify p_purpose is absent when no purpose text was entered.
+    expect(rpcArgs).toStrictEqual({
+      p_request_id: rpcArgs.p_request_id as string, // validated by pattern above
       p_actor_id: "actor-1",
       p_resource_id: "res-42",
       p_start: "2026-07-01T10:00:00.000Z",
       p_end: "2026-07-01T11:00:00.000Z",
+      p_purpose: undefined,
     });
-    // p_request_id should be a UUID
-    expect(rpcArgs.p_request_id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
+
+    // Belt-and-suspenders: explicitly confirm p_purpose is absent.
+    expect(rpcArgs.p_purpose).toBeUndefined();
   });
 
   it("f) on success (confirmed), DecisionModal opens and shows 'Confirmed'", async () => {

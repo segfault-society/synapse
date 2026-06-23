@@ -41,7 +41,10 @@ describe("DecisionModal", () => {
   it("d) waitlisted with rank=3 shows 'rank 3'", () => {
     const decision: Decision = { status: "waitlisted", rank: 3 };
     renderModal(decision);
-    expect(screen.getByText(/rank 3/i)).toBeInTheDocument();
+    // Scope to the dialog heading so partial DOM text elsewhere does not give a
+    // false positive (e.g. a counterfactual label that happens to mention rank 3).
+    const heading = screen.getByRole("heading");
+    expect(heading.textContent).toMatch(/rank 3/i);
   });
 
   it("e) rejected with reason shows reason text", () => {
