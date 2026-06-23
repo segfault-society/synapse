@@ -96,7 +96,7 @@ describe("OpsPanel", () => {
     expect(mockRpc).toHaveBeenCalledTimes(1);
     const [rpcName] = mockRpc.mock.calls[0];
     expect(rpcName).toBe("run_fairness_rebalance");
-    expect(mockRpc.mock.calls[0][1]).toMatchObject({ p_actor_id: persona.id });
+    expect(mockRpc.mock.calls[0][1]).toEqual({});
   });
 
   it("c) rebalance success — toast.success shown and result card displayed", async () => {
@@ -140,7 +140,7 @@ describe("OpsPanel", () => {
     expect(mockRpc).toHaveBeenCalledTimes(1);
     const [rpcName] = mockRpc.mock.calls[0];
     expect(rpcName).toBe("run_no_show_reaper");
-    expect(mockRpc.mock.calls[0][1]).toMatchObject({ p_actor_id: persona.id });
+    expect(mockRpc.mock.calls[0][1]).toEqual({});
   });
 
   it("f) reaper success — toast.success shown", async () => {

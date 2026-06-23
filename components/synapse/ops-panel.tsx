@@ -44,7 +44,7 @@ export function OpsPanel() {
     setRebalanceResult(null);
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("run_fairness_rebalance", { p_actor_id: persona?.id });
+      const { data, error } = await supabase.rpc("run_fairness_rebalance", {});
       if (error) {
         toast.error(`Rebalance failed: ${error.message}`);
       } else {
@@ -62,7 +62,7 @@ export function OpsPanel() {
     setReaperResult(null);
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("run_no_show_reaper", { p_actor_id: persona?.id });
+      const { data, error } = await supabase.rpc("run_no_show_reaper", {});
       if (error) {
         toast.error(`No-show reaper failed: ${error.message}`);
       } else {
