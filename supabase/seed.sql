@@ -1,0 +1,1 @@
+-- seed.sql (placeholder — Task 8 fills this in)
