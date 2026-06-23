@@ -12,13 +12,21 @@ begin
   select * into m from public.members where id = p_member_id;
   select * into r from public.resources where id = p_resource_id;
 
-  select numeric_value into w_alpha from public.policy_settings where key='alpha';
-  select numeric_value into w_beta  from public.policy_settings where key='beta';
-  select numeric_value into w_gamma from public.policy_settings where key='gamma';
-  select numeric_value into w_delta from public.policy_settings where key='delta';
-  select numeric_value into w_eps   from public.policy_settings where key='epsilon';
-  select numeric_value into horizon from public.policy_settings where key='urgency_horizon_hours';
-  select numeric_value::int into recency_window from public.policy_settings where key='recency_window_days';
+  select coalesce(numeric_value, 0.25) into w_alpha from public.policy_settings where key='alpha';
+  select coalesce(numeric_value, 0.30) into w_beta  from public.policy_settings where key='beta';
+  select coalesce(numeric_value, 0.30) into w_gamma from public.policy_settings where key='gamma';
+  select coalesce(numeric_value, 0.10) into w_delta from public.policy_settings where key='delta';
+  select coalesce(numeric_value, 0.05) into w_eps   from public.policy_settings where key='epsilon';
+  select coalesce(numeric_value, 168)  into horizon from public.policy_settings where key='urgency_horizon_hours';
+  select coalesce(numeric_value::int, 7) into recency_window from public.policy_settings where key='recency_window_days';
+  -- apply defaults for any key that had no row at all
+  w_alpha        := coalesce(w_alpha, 0.25);
+  w_beta         := coalesce(w_beta,  0.30);
+  w_gamma        := coalesce(w_gamma, 0.30);
+  w_delta        := coalesce(w_delta, 0.10);
+  w_eps          := coalesce(w_eps,   0.05);
+  horizon        := coalesce(horizon, 168);
+  recency_window := coalesce(recency_window, 7);
 
   hours_until := greatest(0, extract(epoch from (p_start - now()))/3600.0);
   urgency := greatest(0, 1 - hours_until / nullif(horizon,0));
@@ -26,6 +34,7 @@ begin
 
   role_w := case
     when m.role = 'faculty' then (select numeric_value from public.policy_settings where key='role_weight_faculty')
+    -- lab_manager/admin intentionally reuse the faculty role weight (no dedicated key by design)
     when m.role in ('lab_manager','admin') then (select numeric_value from public.policy_settings where key='role_weight_faculty')
     when m.role = 'student' and m.is_final_year then (select numeric_value from public.policy_settings where key='role_weight_final_year')
     when m.role = 'student' and coalesce(m.year_level,1) >= 4 then (select numeric_value from public.policy_settings where key='role_weight_postgrad')
@@ -57,7 +66,7 @@ begin
     'components', jsonb_build_object(
       'urgency', round(urgency,4), 'role_weight', round(role_w,4),
       'fairness_deficit', round(fairness,4), 'recency_penalty', round(recency,4),
-      'academic_purpose', purpose_match));
+      'academic_purpose', round(purpose_match, 4)));
 end;
 $$;
 
