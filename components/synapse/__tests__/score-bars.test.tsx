@@ -29,9 +29,18 @@ describe("ScoreBars", () => {
     expect(screen.getAllByText("0.00").length).toBeGreaterThan(0);
   });
 
-  it("does not crash with a >1 value (clamps to 100%)", () => {
+  it("clamps >1 values to 100% and renders the raw display value", () => {
     const components = makeScoreComponents({ urgency: 1.5, role_weight: 2.0 });
-    expect(() => render(<ScoreBars components={components} />)).not.toThrow();
+    render(<ScoreBars components={components} />);
+    // The numeric label still shows the raw value (not clamped), confirming render happened.
+    expect(screen.getByText("1.50")).toBeInTheDocument();
+    expect(screen.getByText("2.00")).toBeInTheDocument();
+    // The Progress bar value is clamped: aria-valuenow must not exceed 100.
+    const progressBars = document.querySelectorAll('[role="progressbar"]');
+    progressBars.forEach((bar) => {
+      const valueNow = Number(bar.getAttribute("aria-valuenow"));
+      expect(valueNow).toBeLessThanOrEqual(100);
+    });
   });
 
   it("does not crash when a key value is null/undefined (cast as any)", () => {

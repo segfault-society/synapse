@@ -153,7 +153,8 @@ export function mockSupabaseClient(impl?: SupabaseMockImpl) {
     chain.order = self;
     chain.limit = self;
     chain.single = () => Promise.resolve({ data: data[0] ?? null, error: null });
-    chain.then = (resolve: (v: typeof result) => void) => Promise.resolve(result).then(resolve);
+    chain.then = (resolve: (v: typeof result) => unknown, reject?: (reason: unknown) => unknown) =>
+      Promise.resolve(result).then(resolve, reject);
     // Make the chain itself a thenable (awaitable)
     Object.defineProperty(chain, Symbol.toStringTag, { value: "MockSupabaseChain" });
 

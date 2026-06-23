@@ -90,7 +90,7 @@ describe("ResourceGrid", () => {
     expect(screen.getByText("No resources match the selected filters.")).toBeInTheDocument();
   });
 
-  it("does not crash with an empty resources array", async () => {
+  it("still renders filter comboboxes with an empty resources array", async () => {
     vi.mocked(useResources).mockReturnValue({
       resources: [],
       loading: false,
@@ -98,8 +98,9 @@ describe("ResourceGrid", () => {
     });
     render(<ResourceGrid />);
     await act(async () => {});
-    // If render or the effect threw, the test would have failed at the await above.
-    expect(screen.getByText("No resources match the selected filters.")).toBeInTheDocument();
+    // Filters should still be present even when there are no resources.
+    const combos = screen.getAllByRole("combobox");
+    expect(combos.length).toBeGreaterThanOrEqual(2);
   });
 
   it("filters cards by class when a class filter is applied via Select", async () => {

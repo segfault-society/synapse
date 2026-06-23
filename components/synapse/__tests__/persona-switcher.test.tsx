@@ -39,17 +39,18 @@ beforeEach(() => {
 
 describe("PersonaSwitcher", () => {
   it("renders nothing before mount / does not crash on empty personas", async () => {
-    // Test the hasMounted SSR guard: rendering with empty personas must not throw.
+    // Test the hasMounted SSR guard with empty personas — component must not crash.
     vi.mocked(usePersonaStore).mockImplementation(
       (selector: (s: { persona: null; personas: []; loadPersonas: typeof mockLoadPersonas; setPersona: typeof mockSetPersona }) => unknown) =>
         selector({ persona: null, personas: [], loadPersonas: mockLoadPersonas, setPersona: mockSetPersona })
     );
     render(<PersonaSwitcher />);
-    // After effects run (hasMounted=true), empty persona list yields no role badge.
-    await waitFor(() => {
-      expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    });
-    // Reaching this line without throwing IS the assertion — the component is stable.
+    // After effects run (hasMounted=true), the Select trigger must be present (no crash).
+    await act(async () => {});
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
+    // No badge because persona is null — this is the real SSR-guard assertion:
+    // if the component crashed or returned null permanently, getByRole above would throw.
+    expect(screen.queryByText(/student|faculty|lab_manager|admin/)).not.toBeInTheDocument();
   });
 
   it("renders the select and badge after mount", async () => {
