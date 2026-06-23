@@ -38,17 +38,18 @@ beforeEach(() => {
 });
 
 describe("PersonaSwitcher", () => {
-  it("does not render the select before mount completes (hasMounted guard)", () => {
-    // In React 19 + jsdom, effects may run synchronously in some scenarios.
-    // The key behaviour to test: either the component returns null before mount,
-    // or it renders correctly after mount. We verify it renders correctly after act().
+  it("renders nothing before mount / does not crash on empty personas", async () => {
+    // Test the hasMounted SSR guard: rendering with empty personas must not throw.
+    vi.mocked(usePersonaStore).mockImplementation(
+      (selector: (s: { persona: null; personas: []; loadPersonas: typeof mockLoadPersonas; setPersona: typeof mockSetPersona }) => unknown) =>
+        selector({ persona: null, personas: [], loadPersonas: mockLoadPersonas, setPersona: mockSetPersona })
+    );
     render(<PersonaSwitcher />);
-    // After synchronous render + effects, either null or combobox is present.
-    // Both are valid — the important thing is no crash and it works after mount.
-    // The mount test below covers the positive case.
-    const combobox = screen.queryByRole("combobox");
-    // If present immediately (React 19 batching), confirm it works; if absent, also fine.
-    expect(combobox === null || combobox !== null).toBe(true);
+    // After effects run (hasMounted=true), empty persona list yields no role badge.
+    await waitFor(() => {
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+    // Reaching this line without throwing IS the assertion — the component is stable.
   });
 
   it("renders the select and badge after mount", async () => {

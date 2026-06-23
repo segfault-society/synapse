@@ -96,10 +96,10 @@ describe("ResourceGrid", () => {
       loading: false,
       refetch: vi.fn(),
     });
-    expect(async () => {
-      render(<ResourceGrid />);
-      await act(async () => {});
-    }).not.toThrow();
+    render(<ResourceGrid />);
+    await act(async () => {});
+    // If render or the effect threw, the test would have failed at the await above.
+    expect(screen.getByText("No resources match the selected filters.")).toBeInTheDocument();
   });
 
   it("filters cards by class when a class filter is applied via Select", async () => {
@@ -120,31 +120,13 @@ describe("ResourceGrid", () => {
     // After clicking trigger, look for the select item specifically by role option
     // or by finding text that only appears in the open dropdown (not elsewhere in the DOM).
     // Radix renders items in a portal with role="option".
-    const option = await waitFor(
-      () => {
-        const options = screen.queryAllByRole("option");
-        return options.find((o) => o.textContent === "Computer Lab");
-      },
-      { timeout: 2000 }
-    );
+    const option = await screen.findByRole("option", { name: /computer lab/i });
+    expect(option).toBeInTheDocument(); // fails loudly if Radix Select didn't open
 
-    if (option) {
-      await user.click(option);
-      await waitFor(() => {
-        expect(screen.getByText("CS Lab A")).toBeInTheDocument();
-        expect(screen.queryByText("Meeting Room 1")).not.toBeInTheDocument();
-      });
-    } else {
-      // Radix portal items not available in this jsdom setup.
-      // Verify filter logic directly by triggering state change via the internal select.
-      // The Radix Select renders a hidden native <select> with a data attribute.
-      // We find it and fire a change event.
-      const nativeSelects = document.querySelectorAll(
-        'select[aria-hidden="true"], [data-radix-select-viewport] ~ select'
-      );
-      // If we can't test via Radix portal, skip with a note
-      // (the component behavior was verified via unit logic)
+    await user.click(option);
+    await waitFor(() => {
       expect(screen.getByText("CS Lab A")).toBeInTheDocument();
-    }
+      expect(screen.queryByText("Meeting Room 1")).not.toBeInTheDocument();
+    });
   });
 });
