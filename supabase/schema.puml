@@ -1,0 +1,182 @@
+@startuml Database Schema
+
+!define TABLE(x) class x << (T,#FFAAAA) >>
+!define VIEW(x) class x << (V,#AAFFAA) >>
+!define ENUM(x) class x << (E,#AAAAFF) >>
+!define FUNC(x) class x << (F,#FFFFAA) >>
+!define PK(x) <u>x</u>
+!define FK(x) #x
+
+skinparam classAttributeIconSize 0
+
+' ==================== ENUMS ====================
+ENUM(app_role) {
+  user
+  moderator
+  admin
+}
+
+ENUM(app_permission) {
+  users.read
+  users.update
+  users.delete
+  items.read_all
+  items.update_all
+  items.delete_all
+  admin.access
+  admin.manage_roles
+}
+
+' ==================== CORE TABLES ====================
+TABLE(profiles) {
+  PK(id) : uuid
+  --
+  email : text
+  full_name : text
+  avatar_url : text
+  created_at : timestamptz
+  updated_at : timestamptz
+  --
+  <i>RLS: Own profile only</i>
+  <i>Admin override: users.read</i>
+}
+
+TABLE(items) {
+  PK(id) : uuid
+  --
+  FK(user_id) : uuid
+  title : text
+  description : text
+  image_url : text
+  created_at : timestamptz
+  updated_at : timestamptz
+  --
+  <i>RLS: Own items only</i>
+  <i>Admin override: items.*</i>
+}
+
+' ==================== RBAC TABLES ====================
+TABLE(user_roles) {
+  PK(id) : integer
+  --
+  FK(user_id) : uuid <<unique>>
+  role : app_role
+  created_at : timestamptz
+  FK(created_by) : uuid
+  --
+  <i>NO API ACCESS</i>
+  <i>Only via functions</i>
+}
+
+TABLE(role_permissions) {
+  PK(id) : integer
+  --
+  role : app_role
+  permission : app_permission
+  --
+  <i>Read-only reference</i>
+}
+
+' ==================== VIEWS ====================
+VIEW(admin_users_view) {
+  id : uuid
+  email : text
+  created_at : timestamptz
+  last_sign_in_at : timestamptz
+  full_name : text
+  avatar_url : text
+  role : app_role
+  --
+  <i>Requires: admin.access</i>
+}
+
+' ==================== FUNCTIONS ====================
+FUNC(custom_access_token_hook) {
+  <i>Injects role into JWT</i>
+  <i>Called by Supabase Auth</i>
+}
+
+FUNC(authorize) {
+  <i>Checks permission</i>
+  <i>Used in RLS policies</i>
+}
+
+FUNC(set_user_role) {
+  <i>Admin role management</i>
+  <i>Requires: admin.manage_roles</i>
+}
+
+FUNC(get_my_role) {
+  <i>Returns current user role</i>
+}
+
+' ==================== RELATIONSHIPS ====================
+
+' Core relationships
+profiles "1" -- "0..*" items : owns
+
+' RBAC relationships
+app_role "1" -- "0..*" user_roles : assigned
+app_role "1" -- "0..*" role_permissions : grants
+app_permission "1" -- "0..*" role_permissions : granted_by
+
+' View relationships
+admin_users_view ..> profiles : joins
+admin_users_view ..> user_roles : joins
+
+' Function relationships
+custom_access_token_hook ..> user_roles : reads
+authorize ..> role_permissions : checks
+set_user_role ..> user_roles : modifies
+
+' ==================== NOTES ====================
+
+note right of user_roles
+  <b>Security:</b>
+  This table has NO RLS policies,
+  meaning it's not accessible via
+  the Supabase API.
+  
+  Access only through:
+  - supabase_auth_admin (auth hook)
+  - Database functions
+end note
+
+note right of custom_access_token_hook
+  <b>Auth Flow:</b>
+  1. User signs in
+  2. Hook queries user_roles
+  3. Role injected into JWT
+  4. Client receives token
+end note
+
+note bottom of authorize
+  <b>Used in RLS policies:</b>
+  
+  USING (
+    auth.uid() = user_id
+    OR authorize('items.read_all')
+  )
+end note
+
+note left of items
+  <b>Storage Bucket:</b>
+  "uploads" (PRIVATE)
+  
+  Path: {user_id}/items/{file}
+  RLS: User's own folder only
+end note
+
+' ==================== LEGEND ====================
+
+legend right
+  | Symbol | Meaning |
+  |<#FFAAAA>  T  | Table |
+  |<#AAFFAA>  V  | View |
+  |<#AAAAFF>  E  | Enum |
+  |<#FFFFAA>  F  | Function |
+  | <u>column</u> | Primary Key |
+  | #column | Foreign Key |
+endlegend
+
+@enduml
