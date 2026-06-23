@@ -26,7 +26,7 @@ export function ScoreBars({ components }: ScoreBarsProps) {
   return (
     <div className="space-y-2">
       {BAR_CONFIG.map(({ key, label, deduction }) => {
-        const raw = components[key] ?? 0;
+        const raw = components[key];
         const pct = toScorePct(raw);
         return (
           <div key={key} className="grid grid-cols-[140px_1fr_40px] items-center gap-2">
