@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,9 @@ export function DecisionModal({ decision, open, onClose }: DecisionModalProps) {
             <span>{icon}</span>
             <span>{label}</span>
           </DialogTitle>
+          <DialogDescription>
+            How SYNAPSE reached this decision — priority scores and alternatives.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
