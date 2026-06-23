@@ -256,11 +256,11 @@ describe("DemoControlRoom", () => {
     );
   });
 
-  it("m) Fix B(ii): manually deselecting a member persists after personas state is stable", async () => {
-    render(<DemoControlRoom />);
+  it("m) Fix B(ii): useRef guard prevents re-seeding when personas reference changes", async () => {
+    const { rerender } = render(<DemoControlRoom />);
     const user = userEvent.setup();
 
-    // Initially 3 selected
+    // Initially 3 selected (Sarah, Mihir, Dr. Perera seeded by default)
     expect(screen.getByText(/3 selected/i)).toBeInTheDocument();
 
     // Deselect Sarah
@@ -270,9 +270,21 @@ describe("DemoControlRoom", () => {
     // Should now show 2 selected
     expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
 
-    // Re-render doesn't re-seed (would reset back to 3)
-    // Since useRef seeded guard, persona changes don't wipe the selection
-    // We can verify by checking selection count remains 2
+    // Now force the seeding useEffect to re-evaluate by handing the store a
+    // BRAND-NEW personas array reference (same members, fresh array identity).
+    // This is exactly what would re-run the seeding effect — without the
+    // `seeded` useRef guard, the effect would re-seed and restore Sarah,
+    // flipping the count back to 3. With the guard, selection stays at 2.
+    const freshPersonas = [...personas];
+    expect(freshPersonas).not.toBe(personas); // new reference, same members
+    mockPersonaStore({ personas: freshPersonas, loadPersonas: vi.fn() });
+
+    await act(async () => {
+      rerender(<DemoControlRoom />);
+    });
+
+    // Guard held: still 2 selected, Sarah stays deselected (NOT re-seeded to 3).
+    expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
     expect(screen.queryByText(/3 selected/i)).not.toBeInTheDocument();
   });
 });
