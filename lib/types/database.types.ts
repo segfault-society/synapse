@@ -542,6 +542,10 @@ export type Database = {
         }
         Returns: Json
       }
+      update_policy: {
+        Args: { p_actor_id: string; p_key: string; p_value: number }
+        Returns: Json
+      }
     }
     Enums: {
       app_permission:
