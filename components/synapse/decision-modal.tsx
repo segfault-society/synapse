@@ -98,38 +98,40 @@ export function DecisionModal({ decision, open, onClose }: DecisionModalProps) {
           {explainer && (
             <>
               {/* Winner */}
-              <MemberScoreBlock member={explainer.winner} label="Allocated to" />
+              {explainer.winner && <MemberScoreBlock member={explainer.winner} label="Allocated to" />}
 
               {/* Other contenders */}
-              {explainer.contenders.length > 0 && (
+              {(explainer.contenders ?? []).length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Other applicants
                   </p>
-                  {explainer.contenders.map((c) => (
+                  {(explainer.contenders ?? []).map((c) => (
                     <MemberScoreBlock key={c.member_id} member={c} />
                   ))}
                 </div>
               )}
 
               {/* Why this outcome */}
-              <div className="rounded-md border border-cyan-200 bg-cyan-50/50 dark:bg-cyan-900/10 dark:border-cyan-800 px-3 py-2 text-sm">
-                <p className="font-medium text-cyan-700 dark:text-cyan-400 mb-0.5">Why this outcome</p>
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  {explainer.winner.name} received this slot because they had the highest
-                  composite priority score ({explainer.winner.score.toFixed(3)}) among all
-                  applicants for this time window, accounting for role weight, fairness history,
-                  and request urgency.
-                </p>
-              </div>
+              {explainer.winner && (
+                <div className="rounded-md border border-cyan-200 bg-cyan-50/50 dark:bg-cyan-900/10 dark:border-cyan-800 px-3 py-2 text-sm">
+                  <p className="font-medium text-cyan-700 dark:text-cyan-400 mb-0.5">Why this outcome</p>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    {explainer.winner.name} received this slot because they had the highest
+                    composite priority score ({explainer.winner.score.toFixed(3)}) among all
+                    applicants for this time window, accounting for role weight, fairness history,
+                    and request urgency.
+                  </p>
+                </div>
+              )}
 
               {/* Counterfactuals */}
-              {explainer.counterfactuals.length > 0 && (
+              {(explainer.counterfactuals ?? []).length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     What-if scenarios
                   </p>
-                  {explainer.counterfactuals.map((cf, idx) => (
+                  {(explainer.counterfactuals ?? []).map((cf, idx) => (
                     <div
                       key={idx}
                       className="rounded-md border bg-muted/30 px-3 py-2 flex items-start justify-between gap-3"
