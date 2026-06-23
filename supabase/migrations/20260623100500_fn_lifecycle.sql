@@ -1,11 +1,15 @@
 create or replace function public.cancel_booking(p_actor_id uuid, p_booking_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
-declare b public.bookings; promoted uuid;
+declare b public.bookings; promoted uuid; v_count integer;
 begin
   select * into b from public.bookings where id = p_booking_id;
   if not found then return jsonb_build_object('status','rejected','reason','not found'); end if;
   perform pg_advisory_xact_lock(hashtext(b.resource_id::text));
-  update public.bookings set status='cancelled' where id = p_booking_id;
+  update public.bookings set status='cancelled' where id = p_booking_id and status='confirmed';
+  get diagnostics v_count = row_count;
+  if v_count = 0 then
+    return jsonb_build_object('status','noop','reason','not confirmed or already cancelled');
+  end if;
   promoted := public.promote_top_waitlist(b.resource_id, b.during);
   insert into public.audit_log (kind, actor_id, resource_id, booking_id, decision_explainer)
     values ('booking_cancelled', p_actor_id, b.resource_id, p_booking_id,
@@ -72,6 +76,12 @@ begin
                   where b.member_id=m.id and r.resource_class=cls and b.status in ('confirmed','completed')
                     and lower(b.during) >= now() - make_interval(days => win)),0) as served
       from public.members m
+      where exists (
+        select 1 from public.bookings b join public.resources r on r.id=b.resource_id
+        where b.member_id=m.id and r.resource_class=cls
+          and b.status in ('confirmed','completed')
+          and lower(b.during) >= now() - make_interval(days => win)
+      )
     loop
       ft := case when fshare>0 then least(1, greatest(0,(fshare-rec.served)/fshare)) else 0 end;
       insert into public.fairness_ledger (member_id, resource_class, served_hours, fair_share, fairness_term, window_start, window_end, updated_at)
@@ -95,6 +105,7 @@ create or replace function public.propose_swap(p_actor_id uuid, p_booking_a uuid
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare a public.bookings; b public.bookings;
         ua_b numeric; ua_a numeric; ub_b numeric; ub_a numeric;
+        key_a bigint; key_b bigint;
 begin
   select * into a from public.bookings where id=p_booking_a and status='confirmed';
   select * into b from public.bookings where id=p_booking_b and status='confirmed';
@@ -107,8 +118,12 @@ begin
     return jsonb_build_object('ok',false,'reason','one side would lose out',
       'deltas', jsonb_build_object('a_before',ua_b,'a_after',ua_a,'b_before',ub_b,'b_after',ub_a));
   end if;
-  perform pg_advisory_xact_lock(hashtext(a.resource_id::text));
-  perform pg_advisory_xact_lock(hashtext(b.resource_id::text));
+  key_a := hashtext(a.resource_id::text);
+  key_b := hashtext(b.resource_id::text);
+  perform pg_advisory_xact_lock(least(key_a, key_b));
+  if key_a <> key_b then
+    perform pg_advisory_xact_lock(greatest(key_a, key_b));
+  end if;
   update public.bookings set status='cancelled' where id in (a.id, b.id);
   insert into public.bookings (member_id, resource_id, during, status, purpose, request_id) values
     (a.member_id, b.resource_id, b.during, 'confirmed', a.purpose, gen_random_uuid()),
