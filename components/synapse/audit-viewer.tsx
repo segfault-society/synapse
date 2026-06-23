@@ -153,7 +153,9 @@ export function AuditViewer() {
                                   </span>{" "}
                                   — score {explainer.winner.score?.toFixed(3) ?? "—"}
                                 </p>
-                                <ScoreBars components={explainer.winner.components} />
+                                {explainer.winner.components && (
+                                  <ScoreBars components={explainer.winner.components} />
+                                )}
                               </div>
                             )}
 

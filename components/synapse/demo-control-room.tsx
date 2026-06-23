@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { createClient } from "@/lib/supabase/client";
@@ -25,15 +25,17 @@ import { Label } from "@/components/ui/label";
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
-/** Returns ISO strings for tomorrow 14:00 and 15:00 (local time → UTC). */
+/** Returns local YYYY-MM-DDTHH:MM strings for tomorrow 14:00 and 15:00. */
 function defaultSlot(): { start: string; end: string } {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  d.setHours(14, 0, 0, 0);
-  const start = d.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
-  d.setHours(15, 0, 0, 0);
-  const end = d.toISOString().slice(0, 16);
-  return { start, end };
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const y = tomorrow.getFullYear();
+  const m = pad(tomorrow.getMonth() + 1);
+  const d = pad(tomorrow.getDate());
+  const localStart = `${y}-${m}-${d}T14:00`;
+  const localEnd = `${y}-${m}-${d}T15:00`;
+  return { start: localStart, end: localEnd };
 }
 
 const DEFAULT_NAMES = ["Sarah", "Mihir", "Dr. Perera"];
@@ -58,10 +60,12 @@ export function DemoControlRoom() {
 
   // default-checked member IDs: those whose name matches DEFAULT_NAMES
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const seeded = useRef(false);
 
-  // seed defaults once personas load
+  // seed defaults once personas load (runs only once)
   useEffect(() => {
-    if (!personas.length) return;
+    if (seeded.current || !personas.length) return;
+    seeded.current = true;
     const ids = personas
       .filter((p) =>
         DEFAULT_NAMES.some((n) => p.full_name?.toLowerCase().includes(n.toLowerCase()))
