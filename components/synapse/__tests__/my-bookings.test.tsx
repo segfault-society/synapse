@@ -176,7 +176,10 @@ describe("MyBookings", () => {
     await act(async () => {});
 
     const user = userEvent.setup();
-    const checkInBtn = screen.getByRole("button", { name: /check in/i });
+    const resourceHeading = screen.getByText("Meeting Room A");
+    const card = resourceHeading.closest('[data-slot="card"]') as HTMLElement;
+    expect(card).not.toBeNull();
+    const checkInBtn = within(card).getByRole("button", { name: /check in/i });
     await user.click(checkInBtn);
     await act(async () => {});
 

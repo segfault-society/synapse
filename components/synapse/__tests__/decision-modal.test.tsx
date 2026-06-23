@@ -97,6 +97,7 @@ describe("DecisionModal", () => {
     });
     const decision: Decision = { status: "waitlisted", rank: 1, explainer };
     expect(() => renderModal(decision)).not.toThrow();
+    expect(screen.getByRole("heading").textContent).toMatch(/waitlisted/i);
   });
 
   it("h) CRASH SAFETY: rejected decision with no explainer", () => {
