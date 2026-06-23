@@ -5,22 +5,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users } from "lucide-react";
 import type { Resource } from "@/lib/synapse/types";
-import type { Json } from "@/lib/types/database.types";
+import { humanizeResourceClass, toStringArray } from "@/lib/synapse/format";
 
 interface ResourceCardProps {
   resource: Resource;
-}
-
-function humanizeResourceClass(cls: string): string {
-  return cls
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function toStringArray(value: Json): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string");
 }
 
 export function ResourceCard({ resource }: ResourceCardProps) {

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScoreBars } from "@/components/synapse/score-bars";
 import type { Decision, ScoredMember } from "@/lib/synapse/types";
+import { humanizeRole } from "@/lib/synapse/format";
 
 interface DecisionModalProps {
   decision: Decision | null;
@@ -37,13 +38,6 @@ function statusHeader(decision: Decision): { icon: string; label: string; color:
     default:
       return { icon: "?", label: String(decision.status), color: "text-muted-foreground" };
   }
-}
-
-function humanizeRole(role: string): string {
-  return role
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 function MemberScoreBlock({ member, label }: { member: ScoredMember; label?: string }) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { parseTstzrange } from "@/lib/synapse/format";
 
 interface BusyInterval {
   start: Date;
@@ -17,21 +18,6 @@ interface SlotPickerProps {
 const BUSINESS_HOUR_START = 8;   // 08:00
 const BUSINESS_HOUR_END = 18;    // 18:00 (last slot starts at 17:00)
 const DAYS_AHEAD = 7;
-
-/** Parse a PostgreSQL tstzrange string like "[2024-01-01T08:00:00+00,2024-01-01T09:00:00+00)" */
-function parseRange(during: unknown): BusyInterval | null {
-  if (typeof during !== "string") return null;
-  // Strip brackets/parens and split on comma
-  const inner = during.replace(/^[\[(]/, "").replace(/[\])]$/, "");
-  const comma = inner.indexOf(",");
-  if (comma === -1) return null;
-  const startStr = inner.slice(0, comma).trim();
-  const endStr = inner.slice(comma + 1).trim();
-  const start = new Date(startStr);
-  const end = new Date(endStr);
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
-  return { start, end };
-}
 
 function isBusy(slotStart: Date, slotEnd: Date, busyIntervals: BusyInterval[]): boolean {
   return busyIntervals.some(
@@ -108,7 +94,7 @@ export function SlotPicker({ resourceId, onSelect, selected }: SlotPickerProps) 
       if (!active) return;
       const intervals: BusyInterval[] = [];
       for (const row of data ?? []) {
-        const interval = parseRange(row.during);
+        const interval = parseTstzrange(row.during);
         if (interval) intervals.push(interval);
       }
       setBusyIntervals(intervals);

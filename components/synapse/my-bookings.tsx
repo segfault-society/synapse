@@ -8,6 +8,7 @@ import { useBookings } from "@/hooks/use-bookings";
 import { useWaitlists } from "@/hooks/use-waitlists";
 import { useResources } from "@/hooks/use-resources";
 import type { Booking } from "@/lib/synapse/types";
+import { parseTstzrange, formatSlot } from "@/lib/synapse/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,41 +29,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-/** Parse a PostgreSQL tstzrange like `["2026-06-24 14:00:00+00","2026-06-24 15:00:00+00")` */
-function parseTstzrange(during: unknown): { start: Date; end: Date } | null {
-  if (typeof during !== "string") return null;
-  const inner = during.replace(/^[\[(]/, "").replace(/[\])]$/, "");
-  const comma = inner.indexOf(",");
-  if (comma === -1) return null;
-  const startStr = inner.slice(0, comma).trim();
-  const endStr = inner.slice(comma + 1).trim();
-  const start = new Date(startStr);
-  const end = new Date(endStr);
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
-  return { start, end };
-}
-
-function formatSlot(during: unknown): string {
-  const range = parseTstzrange(during);
-  if (!range) return "Unknown time";
-  const dateStr = range.start.toLocaleDateString("en-AU", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-  const startTime = range.start.toLocaleTimeString("en-AU", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-  const endTime = range.end.toLocaleTimeString("en-AU", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-  return `${dateStr} · ${startTime}–${endTime}`;
-}
 
 function isUpcoming(during: unknown): boolean {
   const range = parseTstzrange(during);

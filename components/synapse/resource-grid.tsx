@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useResources } from "@/hooks/use-resources";
 import { ResourceCard } from "@/components/synapse/resource-card";
+import { humanizeResourceClass } from "@/lib/synapse/format";
 
 const RESOURCE_CLASSES = [
   "meeting_room",
@@ -19,13 +20,6 @@ const RESOURCE_CLASSES = [
   "multimedia_equipment",
   "testing_device",
 ] as const;
-
-function humanizeResourceClass(cls: string): string {
-  return cls
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
 
 export function ResourceGrid() {
   const { resources, loading } = useResources();

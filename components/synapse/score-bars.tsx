@@ -2,6 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import type { ScoreComponents } from "@/lib/synapse/types";
+import { toScorePct } from "@/lib/synapse/format";
 
 interface ScoreBarsProps {
   components: ScoreComponents;
@@ -21,16 +22,12 @@ const BAR_CONFIG: BarConfig[] = [
   { key: "academic_purpose", label: "Academic purpose" },
 ];
 
-function clamp(value: number): number {
-  return Math.min(100, Math.max(0, value * 100));
-}
-
 export function ScoreBars({ components }: ScoreBarsProps) {
   return (
     <div className="space-y-2">
       {BAR_CONFIG.map(({ key, label, deduction }) => {
         const raw = components[key] ?? 0;
-        const pct = clamp(raw);
+        const pct = toScorePct(raw);
         return (
           <div key={key} className="grid grid-cols-[140px_1fr_40px] items-center gap-2">
             <span className="text-xs text-muted-foreground truncate">
