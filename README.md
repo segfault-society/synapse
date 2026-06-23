@@ -78,10 +78,10 @@ Open [http://localhost:3000](http://localhost:3000). Supabase Studio is at [http
 
 | Command | Suite | What it tests |
 | --- | --- | --- |
-| `pnpm test` | Unit + RTL component | 155 Vitest tests: pure-function formatting helpers (`lib/synapse/__tests__/format.test.ts`) and React Testing Library render tests for every SYNAPSE component (15 component test files in `components/synapse/__tests__/`) |
+| `pnpm test` | Unit + RTL component | 155 Vitest tests: pure-function formatting helpers (`lib/synapse/__tests__/format.test.ts`) and React Testing Library render tests for every SYNAPSE component (14 component test files in `components/synapse/__tests__/`) |
 | `pnpm test:e2e` | Playwright E2E | 10 browser tests across 5 spec files: smoke (page loads), full booking flow (Mihir then Sarah on Lab-A), N-way contention simulation, admin console access gate + ops, and My Bookings actions |
 | `pnpm test:db` | SQL engine assertions | 6 SQL test suites run against the live local Postgres via `psql`: schema constraints, helper functions, `priority_score`, `book_request` (conflict + auto-promote), `simulate_contention`, and lifecycle RPCs (check-in, reaper, rebalance, swap) |
-| `pnpm test:all` | All of the above | Runs `pnpm test` then `pnpm test:db` sequentially (E2E requires a running dev server; run it separately with `pnpm test:e2e`) |
+| `pnpm test:all` | All of the above | Runs `pnpm test:unit` then `pnpm test:db` sequentially (E2E requires a running dev server; run it separately with `pnpm test:e2e`) |
 
 ---
 
@@ -142,7 +142,7 @@ The following were explicitly cut to keep the prototype focused on the core allo
 ```text
 supabase/
   migrations/          # Engine — schema, helpers, 8 RPCs
-  seed.sql             # 7 personas, 8 resources, 3-week history
+  seed.sql             # 7 personas, 8 resources, ~18 days of history
   tests/               # 6 SQL assertion suites
 app/
   page.tsx             # / discovery

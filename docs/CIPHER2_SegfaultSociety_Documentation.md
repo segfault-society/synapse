@@ -133,21 +133,21 @@ Every RPC that affects a booking returns an `explainer` field and writes it to `
   "winner": {
     "member_id": "...",
     "name": "Sarah Fernando",
-    "score": 0.72,
+    "score": 0.7257,
     "components": {
-      "urgency": 0.60,
-      "role_weight": 0.80,
-      "fairness_deficit": 0.85,
-      "recency_penalty": 0.00,
-      "academic_purpose": 1.00
+      "urgency": 1.0000,
+      "role_weight": 0.8000,
+      "fairness_deficit": 0.6190,
+      "recency_penalty": 0.0000,
+      "academic_purpose": 1.0000
     }
   },
   "contenders": [
     {
       "member_id": "...",
       "name": "Mihir Jain",
-      "score": 0.31,
-      "components": { "urgency": 0.60, "role_weight": 0.40, "fairness_deficit": 0.00, "recency_penalty": 0.00, "academic_purpose": 0.00 }
+      "score": 0.5557,
+      "components": { "urgency": 1.0000, "role_weight": 0.4000, "fairness_deficit": 0.6190, "recency_penalty": 0.0000, "academic_purpose": 0.0000 }
     }
   ],
   "counterfactuals": [
@@ -163,14 +163,14 @@ Scenario: Mihir (year-1 undergrad) holds Lab-A 14:00–16:00 Tuesday. Sarah (fin
 
 | Component | Mihir | Sarah |
 | --- | --- | --- |
-| urgency (booking is ~24 h away) | 0.60 + 0.15 boost = 0.75 | 0.75 |
+| urgency (booking is ~24 h away) | 1.00 (≤ 48 h boost caps urgency at 1.0) | 1.00 |
 | role_weight | 0.40 (undergrad) | 0.80 (final-year) |
-| fairness_deficit (γ) | 0.00 (recent bookings) | 0.85 (under-served) |
+| fairness_deficit (γ) | 0.619 (under-served on this class) | 0.619 (under-served on this class) |
 | recency_penalty | 0.00 | 0.00 |
 | academic_purpose ("capstone") | 0.00 | 1.00 |
-| **total** (α=0.25, β=0.30, γ=0.30, δ=0.10, ε=0.05) | **0.25×0.75 + 0.30×0.40 + 0.30×0.00 − 0 + 0 = 0.308** | **0.25×0.75 + 0.30×0.80 + 0.30×0.85 − 0 + 0.05×1.0 = 0.728** |
+| **total** (α=0.25, β=0.30, γ=0.30, δ=0.10, ε=0.05) | **0.25×1.00 + 0.30×0.40 + 0.30×0.619 − 0 + 0 = 0.5557** | **0.25×1.00 + 0.30×0.80 + 0.30×0.619 − 0 + 0.05×1.00 = 0.7257** |
 
-Sarah's score (0.728) beats Mihir's (0.308). `book_request` cancels Mihir's booking, enqueues him on the waitlist at rank 1, confirms Sarah, and writes the full explainer to the audit log. Sarah's Decision Modal shows "Confirmed by priority" with a bar chart of each component.
+Sarah's score (0.7257) beats Mihir's (0.5557). The two share the same `fairness_deficit` (0.619) because both have identical Lab-A history in the seed, so Sarah's margin comes entirely from role weight and academic-purpose match. `book_request` cancels Mihir's booking, enqueues him on the waitlist at rank 1, confirms Sarah, and writes the full explainer to the audit log. Sarah's Decision Modal shows "Confirmed by priority" with a bar chart of each component.
 
 ---
 

@@ -127,9 +127,9 @@ Record at 1080p. Aim for a brisk, narrated walkthrough — one idea per screen. 
 - On `/me`, find the confirmed booking for Lab-A Tuesday 14:00.
 - Click **Cancel**.
 - A confirmation dialog appears. Confirm the cancellation.
-- A toast appears: "Booking cancelled — Mihir Jain has been promoted from the waitlist."
+- A toast appears confirming the cancellation: "Booking cancelled." The auto-promotion happens server-side inside the cancel RPC — its effect is visible on the resource page and in the admin audit log, not in this toast.
 - Switch back to **Mihir Jain** and navigate to `/me`.
-- Mihir now has a **confirmed** booking for the slot (waitlist entry is gone or status shows "promoted").
+- Mihir now has a **confirmed** booking for the slot (waitlist entry is gone or status shows "promoted") — proof the auto-promote fired.
 
 **Narration:**
 > "When Sarah cancels, the engine immediately promotes the top-ranked waiter — Mihir — to a confirmed booking. No admin action needed; it's atomic inside the cancel RPC. Mihir gets his slot back without re-submitting. This is the smart waitlist in action."
