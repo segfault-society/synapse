@@ -42,7 +42,7 @@ export function ScoreBars({ components }: ScoreBarsProps) {
               className={deduction ? "[&>div]:bg-amber-400" : "[&>div]:bg-cyan-500"}
             />
             <span className="text-xs tabular-nums text-right text-muted-foreground">
-              {deduction ? `-${raw.toFixed(2)}` : raw.toFixed(2)}
+              {deduction ? `-${(raw ?? 0).toFixed(2)}` : (raw ?? 0).toFixed(2)}
             </span>
           </div>
         );
