@@ -522,10 +522,10 @@ export type Database = {
         Returns: Json
       }
       run_fairness_rebalance: {
-        Args: { p_window_days?: number }
+        Args: { p_actor_id?: string; p_window_days?: number }
         Returns: Json
       }
-      run_no_show_reaper: { Args: { p_grace_minutes?: number }; Returns: Json }
+      run_no_show_reaper: { Args: { p_actor_id?: string; p_grace_minutes?: number }; Returns: Json }
       set_user_role: {
         Args: {
           new_role: Database["public"]["Enums"]["app_role"]
