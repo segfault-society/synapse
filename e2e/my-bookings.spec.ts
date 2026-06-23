@@ -35,18 +35,13 @@ test.describe("My Bookings (/me) page", () => {
     await expect(checkInBtn).toBeVisible({ timeout: 5000 });
     await checkInBtn.click();
 
-    // 9. Assert success toast or "Checked in" badge appears
+    // 9. Assert success toast OR "Checked in" badge appears (single locator-or).
+    // Both may match at once (the toast text contains "Checked in"), so take
+    // `.first()` to keep the assertion strict-mode safe while still passing if
+    // either appears.
     const successToast = page.locator("[data-sonner-toast]");
     const checkedInBadge = page.getByText("Checked in");
-
-    // Wait for either the toast or the badge
-    await Promise.race([
-      expect(successToast).toBeVisible({ timeout: 10000 }),
-      expect(checkedInBadge).toBeVisible({ timeout: 10000 }),
-    ]).catch(async () => {
-      // If neither visible immediately, try toast
-      await expect(successToast).toBeVisible({ timeout: 10000 });
-    });
+    await expect(successToast.or(checkedInBadge).first()).toBeVisible({ timeout: 10000 });
 
     // 10. Navigate away then come back — booking (or checked-in state) is persisted
     await page.goto("/");

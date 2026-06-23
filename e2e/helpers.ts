@@ -31,12 +31,15 @@ export async function clickFirstFreeSlot(page: Page): Promise<string> {
     // networkidle may not resolve in some cases; continue anyway
   });
 
-  // Extra wait for any realtime subscription events to settle
-  await page.waitForTimeout(800);
-
-  // Find all slot buttons (they all have aria-label with time ranges)
+  // Find all slot buttons (they all have aria-label with time ranges).
+  // Web-first assertion (replaces fixed sleep): wait until the slot grid has
+  // rendered AND at least one FREE (non-disabled) slot — the element we are
+  // about to click — is visible. Busy slots carry the HTML `disabled` attr, so
+  // `:not([disabled])` targets exactly the free ones.
   const allSlotButtons = page.locator("button[aria-label]");
   await expect(allSlotButtons.first()).toBeVisible({ timeout: 10000 });
+  const freeSlotButtons = page.locator("button[aria-label]:not([disabled])");
+  await expect(freeSlotButtons.first()).toBeVisible({ timeout: 10000 });
 
   // Iterate to find a button that is NOT HTML-disabled and NOT marked busy
   const count = await allSlotButtons.count();

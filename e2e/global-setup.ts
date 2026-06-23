@@ -1,9 +1,10 @@
 import { execSync } from "child_process";
+import path from "path";
 
 export default async function globalSetup() {
   console.log("Resetting Supabase DB...");
   execSync("supabase db reset", {
-    cwd: "/Users/Avishka.Indula/Projects/hackathons/synapse",
+    cwd: path.resolve(__dirname, ".."),
     stdio: "inherit",
     timeout: 120_000,
   });

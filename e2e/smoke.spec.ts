@@ -38,13 +38,18 @@ test.describe("Smoke — homepage and resource grid", () => {
     // Pick "Computer Lab"
     await page.getByRole("option", { name: "Computer Lab" }).click();
 
-    // Wait a tick for filter to apply
-    await page.waitForTimeout(300);
-
-    // After filtering, count should be <= total
+    // Web-first: a known non-lab resource ("AV Studio") must disappear once the
+    // computer_lab filter is applied. Waiting on this assertion replaces the
+    // arbitrary sleep and proves the filter actually took effect.
     const filteredCards = page.locator('[class*="grid"] h3');
+    await expect(filteredCards.filter({ hasText: "AV Studio" })).toHaveCount(0, {
+      timeout: 10000,
+    });
+
+    // Seed has 8 resources across 4 classes; computer_lab is exactly Lab-A + Lab-B.
+    // The filter must STRICTLY reduce the card count (not merely stay <=).
     const countAfter = await filteredCards.count();
-    expect(countAfter).toBeLessThanOrEqual(countBefore);
+    expect(countAfter).toBeLessThan(countBefore);
     expect(countAfter).toBeGreaterThanOrEqual(1);
 
     // All visible cards should be computer labs — check their headings only show Lab-A/Lab-B

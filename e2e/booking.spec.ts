@@ -37,14 +37,18 @@ test.describe.serial("Booking flow", () => {
     // Navigate to Lab-A
     await goToLabA(page);
 
-    // Wait for busy state to load (networkidle + settle)
+    // Wait for busy state to load (networkidle settles the Supabase fetch)
     await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
-    await page.waitForTimeout(800);
 
-    // Click the SECOND free slot (to avoid the slot Mihir just booked)
-    // Use iteration approach to avoid stale-element races
+    // Click the SECOND free slot (to avoid the slot Mihir just booked).
+    // Use iteration approach to avoid stale-element races. Web-first assertion
+    // (replaces fixed sleep): wait until at least one FREE (non-disabled) slot
+    // is visible — busy slots carry the HTML `disabled` attr.
     const allSlotButtons = page.locator("button[aria-label]");
     await expect(allSlotButtons.first()).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.locator("button[aria-label]:not([disabled])").first()
+    ).toBeVisible({ timeout: 10000 });
 
     const count = await allSlotButtons.count();
     const freeLabels: string[] = [];

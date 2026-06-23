@@ -104,8 +104,9 @@ test.describe.serial("Admin console", () => {
     // Should NOT contain "failed"
     await expect(toast).not.toContainText(/failed/i);
 
-    // Dismiss any toasts / wait for them to clear
-    await page.waitForTimeout(500);
+    // Wait for the prior toast to clear before triggering the next op, so we
+    // assert against the reaper's own toast rather than the rebalance one.
+    await expect(toast).not.toBeVisible({ timeout: 5000 });
 
     // Click Run reaper
     const reaperBtn = page.getByRole("button", { name: "Run reaper" });
