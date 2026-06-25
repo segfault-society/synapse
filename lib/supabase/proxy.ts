@@ -2,17 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 import { Database } from "@/lib/types/database.types";
-import { isValidRole, roleIsAtLeast, type AppRole } from "@/lib/rbac";
-
-/**
- * Extract user role from JWT claims
- */
-function getRoleFromClaims(claims: Record<string, unknown> | null): AppRole {
-  if (!claims) return 'user';
-  const role = claims.user_role;
-  if (isValidRole(role)) return role;
-  return 'user';
-}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -56,45 +45,15 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  // This call refreshes the auth session and keeps the SSR cookies in sync.
+  await supabase.auth.getClaims();
 
-  // Public routes that don't require authentication
-  const publicPaths = ['/', '/login', '/auth', '/privacy', '/terms'];
-  const isPublicPath = publicPaths.some(path => 
-    request.nextUrl.pathname === path || 
-    request.nextUrl.pathname.startsWith(`${path}/`)
-  );
-
-  // Check if user is authenticated for protected routes
-  if (!isPublicPath && !user) {
-    // no user, redirect to home page
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
-
-  // RBAC: Protect admin routes
-  // Admin routes require 'admin' role
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      // Not authenticated - redirect to home
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
-
-    const userRole = getRoleFromClaims(user as Record<string, unknown>);
-    
-    // Check if user has admin role
-    if (!roleIsAtLeast(userRole, 'admin')) {
-      // User doesn't have admin access - redirect to home with error
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      url.searchParams.set("error", "unauthorized");
-      return NextResponse.redirect(url);
-    }
-  }
+  // Prototype note: this app uses a client-side persona switcher instead of
+  // real Supabase auth, so server-side route guards are intentionally NOT applied.
+  // All routes are publicly accessible; access control is handled client-side.
+  // (The admin page client component checks persona.role before rendering.)
+  // The cookie-sync above is harmless and future-proofs real auth, but we never
+  // redirect based on the auth state.
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

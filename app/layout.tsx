@@ -15,8 +15,8 @@ export const righteous = Righteous({
 })
 
 export const metadata: Metadata = {
-  title: "Micro-SaaS Template - Next.js + Supabase + RBAC",
-  description: "A production-ready, security-hardened template for building micro-SaaS applications with Next.js, Supabase, TypeScript, and Role-Based Access Control.",
+  title: "SYNAPSE — Fairness-aware resource allocation",
+  description: "Real-time, conflict-free, transparent allocation of shared university resources.",
   manifest: "/site.webmanifest",
   icons: {
     icon: [
