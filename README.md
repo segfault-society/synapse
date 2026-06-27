@@ -99,11 +99,11 @@ Follow these steps after `supabase db reset && pnpm dev`:
 
 5. **Admin console** — Switch to **System Admin** and navigate to `/admin`. Explore:
    - **Fairness tab** — Tariq (over-served, γ≈0) vs. Ana (under-served, γ near 1.0) side by side.
-   - **Policy tab** — Edit the γ (fairness) weight slider and save. Subsequent bookings pick up the new weight instantly.
+   - **Policy tab** — Edit the γ (fairness) weight numeric input (e.g. 0.30 → 0.40) and click **Save**. Subsequent bookings pick up the new weight instantly.
    - **Ops tab** — Click **Run rebalance** to recompute the fairness ledger; click **Run reaper** to mark no-shows and auto-promote their waitlisted replacements.
    - **Audit tab** — Every engine decision is logged with an expandable explainer.
 
-6. **N-way contention** — Navigate to `/demo`. Select Lab-A, leave Sarah, Mihir, and Dr. Perera checked, then click **Fire simultaneous requests**. The arbiter scores all three order-independently; Dr. Perera (faculty, role weight 1.0) wins. The ranked contender list and score bars appear instantly.
+6. **N-way contention** — Navigate to `/demo`. Select Lab-A, leave Sarah, Mihir, and Dr. Perera checked, then click **Fire simultaneous requests**. The arbiter scores all three order-independently. **Sarah wins (≈0.68)** — her fairness deficit as an under-served student plus her role weight edges out Dr. Perera's role-only score (≈0.55, no fairness deficit). It demonstrates that fairness is a first-class factor, not just seniority. The ranked contender list and score bars appear instantly.
 
 ---
 
