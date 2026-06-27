@@ -74,13 +74,17 @@ Record at 1080p. Brisk, narrated walkthrough — one idea per screen. The engine
 
 **Persona:** any (System Admin is fine)
 
+> **⚠️ Reset before this shot.** The `/demo` winner is computed from the **live fairness ledger**. After the booking shots above, fairness has drifted — and in a drifted state Dr. Perera (faculty, pure role weight) can win. For the scripted "fairness beats seniority" beat, run **`supabase db reset`** first (and refresh the tab) so the fairness ledger is in its seeded state (Sarah's deficit ≈ 0.62). This shot is self-contained — it doesn't depend on the earlier bookings, so a clean reset here is fine (cut to it in editing).
+
 **Show:**
 - Go to **`/demo`** (the contention control room).
 - Resource dropdown → **Lab-A**. Pick a slot (the defaults are fine).
 - Member checklist: keep **Sarah, Mihir, and Dr. Perera** checked (Dr. Perera is faculty).
 - Click **Fire simultaneous requests** (button shows "Simulating…").
-- Results: **Winner — Sarah Fernando ≈ 0.68** (cyan card). Ranked contenders: **#1 Mihir ≈ 0.56**, **#2 Dr. Perera ≈ 0.55**.
+- Results (on clean seed): **Winner — Sarah Fernando ≈ 0.68** (cyan card). Ranked contenders, **each shown with its name**: **#1 Mihir Jain ≈ 0.56**, **#2 Dr. Perera ≈ 0.55**.
 - Re-fire a couple of times to show the winner never changes — order-independent.
+
+> If you'd rather *not* reset, that's fine — just narrate whoever actually wins. The point of this shot is the **order-independent, transparent, multi-factor arbitration**; "fairness outranking faculty" is the bonus you get on the seeded state.
 
 **Narration:**
 > "The control room fires several requests at one slot simultaneously. Watch what happens: the faculty member, Dr. Perera, has the highest role weight — but he *loses*. Sarah, an under-served final-year student, wins because her fairness deficit tips the balance. Fairness is a first-class factor, not an afterthought — and the result is deterministic by score, not by who clicked first."
