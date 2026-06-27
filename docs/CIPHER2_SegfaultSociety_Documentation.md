@@ -125,35 +125,17 @@ Neither side can be made worse off; the swap is only executed when it is strictl
 
 ### 3.6 Decision Explainer Contract
 
-Every RPC that affects a booking returns an `explainer` field and writes it to `audit_log.decision_explainer`. The full contract:
+Every RPC that affects a booking returns an `explainer` field and writes it to `audit_log.decision_explainer`. The contract (abridged):
 
 ```json
 {
   "status": "confirmed_by_priority",
-  "winner": {
-    "member_id": "...",
-    "name": "Sarah Fernando",
-    "score": 0.7257,
-    "components": {
-      "urgency": 1.0000,
-      "role_weight": 0.8000,
-      "fairness_deficit": 0.6190,
-      "recency_penalty": 0.0000,
-      "academic_purpose": 1.0000
-    }
-  },
-  "contenders": [
-    {
-      "member_id": "...",
-      "name": "Mihir Jain",
-      "score": 0.5557,
-      "components": { "urgency": 1.0000, "role_weight": 0.4000, "fairness_deficit": 0.6190, "recency_penalty": 0.0000, "academic_purpose": 0.0000 }
-    }
-  ],
-  "counterfactuals": [
-    { "kind": "alternate_slot",     "label": "Wed 14:00–16:00", "score": 0.61 },
-    { "kind": "alternate_resource", "label": "Lab-B",           "score": 0.58 }
-  ]
+  "winner":    { "name": "Sarah Fernando", "score": 0.7257,
+                 "components": { "urgency": 1.0, "role_weight": 0.80,
+                   "fairness_deficit": 0.619, "recency_penalty": 0.0, "academic_purpose": 1.0 } },
+  "contenders":[ { "name": "Mihir Jain", "score": 0.5557, "rank": 1, "components": { … } } ],
+  "counterfactuals": [ { "kind": "alternate_slot", "label": "Wed 14:00", "score": 0.61 },
+                       { "kind": "alternate_resource", "label": "Lab-B", "score": 0.58 } ]
 }
 ```
 
@@ -241,7 +223,7 @@ Testing is a deliberate strength of this submission — it proves the engine is 
 | SQL engine assertions | 6 suites | psql | Direct Postgres assertions: schema constraints (exclusion constraint blocks overlap), helper functions, `priority_score` formula, `book_request` conflict paths, `simulate_contention` determinism, lifecycle RPCs (check-in, reaper, rebalance, swap) |
 | **Total** | **155 Vitest + 10 Playwright + 6 SQL suites** | | |
 
-The Playwright suite caught a real bug during development: an RPC argument contract mismatch between the front-end hook and the `book_request` signature — the `p_start`/`p_end` arguments were being passed as Date objects rather than ISO strings, causing silent null returns. The E2E booking test surfaced this before it reached manual QA.
+The Playwright suite caught a real bug during development: the admin Ops panel called `run_fairness_rebalance` and `run_no_show_reaper` with a `p_actor_id` argument those functions do not accept, producing a PostgREST 404 at runtime. The mocked component tests passed (they asserted the call shape, not the real signature); only the end-to-end admin test, hitting real Postgres, surfaced it — before it reached the demo.
 
 Run all suites: `pnpm test:all` (unit + component + SQL). Run E2E separately against a running dev server: `pnpm test:e2e`.
 
@@ -256,7 +238,3 @@ Run all suites: `pnpm test:all` (unit + component + SQL). Run E2E separately aga
 | **No PWA / offline mode (F-02)** | App requires connectivity | Add a Next.js service worker (next-pwa) for read-only cached views; write operations require connectivity by nature |
 | **No demand forecast (F-09)** | Cannot predict peak demand | Implement Holt-Winters triple exponential smoothing over `bookings.during` time-series once sufficient history accumulates; the `fairness_ledger` window provides the baseline |
 | **Single-incumbent conflict only** | `book_request` compares the requester against one conflicting booking (the earliest overlap); multi-incumbent arbitration is handled by `simulate_contention` | Extend `book_request` to collect all overlapping confirmed bookings and run the full multi-contender scoring loop from `simulate_contention` |
-
----
-
-*Export this file to PDF as `CIPHER2_SegfaultSociety_Documentation.pdf` before submission. Verify the team name string on the cover and the file name match exactly.*
