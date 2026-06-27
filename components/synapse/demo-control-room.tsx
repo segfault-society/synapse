@@ -40,6 +40,9 @@ function defaultSlot(): { start: string; end: string } {
 
 const DEFAULT_NAMES = ["Sarah", "Mihir", "Dr. Perera"];
 
+/** A contender row from simulate_contention: a scored member plus its rank. */
+type RankedContender = Partial<ScoredMember> & { rank?: number };
+
 // ── component ────────────────────────────────────────────────────────────────
 
 export function DemoControlRoom() {
@@ -115,7 +118,9 @@ export function DemoControlRoom() {
   }
 
   // ── derived ──
-  const contenders: ScoredMember[] = explainer?.contenders ?? [];
+  // Contenders carry the full member identity (name/role) plus a `rank` from
+  // simulate_contention. Keep name/role optional + rank optional for crash-safety.
+  const contenders: RankedContender[] = explainer?.contenders ?? [];
   const counterfactuals = explainer?.counterfactuals ?? [];
   const winner = explainer?.winner ?? null;
 
@@ -267,8 +272,8 @@ export function DemoControlRoom() {
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <span className="text-muted-foreground">#{i + 1}</span>
-                        {c.name}
+                        <span className="text-muted-foreground">#{c.rank ?? i + 1}</span>
+                        <span>{c.name ?? "Member"}</span>
                         {c.member_id === winner?.member_id && (
                           <Badge className="bg-cyan-600 text-white text-xs">Winner</Badge>
                         )}
@@ -276,7 +281,7 @@ export function DemoControlRoom() {
                       <span className="text-xs text-muted-foreground">
                         {c.role} · score{" "}
                         <span className="font-semibold text-foreground">
-                          {c.score.toFixed(3)}
+                          {(c.score ?? 0).toFixed(3)}
                         </span>
                       </span>
                     </div>

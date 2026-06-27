@@ -29,7 +29,10 @@ begin
   perform public.accrue_served_hours(winner_id, r.resource_class, p_start, p_end);
 
   for rec in
-    select (elem->>'member_id')::uuid as member_id, (elem->>'score')::numeric as score, elem->'components' as components
+    select elem,
+           (elem->>'member_id')::uuid as member_id,
+           (elem->>'score')::numeric as score,
+           elem->'components' as components
     from jsonb_array_elements(scored) elem
     where (elem->>'member_id')::uuid <> winner_id
     order by (elem->>'score')::numeric desc, (elem->>'member_id')
@@ -38,8 +41,9 @@ begin
     insert into public.waitlists (request_id, member_id, resource_id, during, score, score_components, status, rank)
       values (gen_random_uuid(), rec.member_id, p_resource_id, tstzrange(p_start,p_end,'[)'),
               rec.score, rec.components, 'waiting', rnk);
-    contenders := contenders || jsonb_build_array(jsonb_build_object(
-      'member_id', rec.member_id, 'score', rec.score, 'rank', rnk, 'components', rec.components));
+    -- carry full identity (member_id, name, role, score, components) + rank
+    contenders := contenders || jsonb_build_array(
+      rec.elem || jsonb_build_object('rank', rnk));
   end loop;
 
   insert into public.audit_log (kind, actor_id, resource_id, booking_id, payload, decision_explainer)

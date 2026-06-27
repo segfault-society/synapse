@@ -2,155 +2,148 @@
 
 **Team:** Segfault Society | **Event:** CIPHER 2.0 | **Target runtime:** 3–4 minutes
 
-Record at 1080p. Aim for a brisk, narrated walkthrough — one idea per screen. No fancy transitions needed; the engine does the talking.
+Record at 1080p. Brisk, narrated walkthrough — one idea per screen. The engine does the talking.
+
+> **All numbers below are the real values the engine produces against the seeded data** (verified). Scores assume you pick a slot within the next ~48 h (urgency caps at 1.0 for slots ≤ 48 h out). If you pick a slot further out, the urgency component — and the totals — drop slightly, but the *ordering* of winners stays the same.
 
 ---
 
 ## Before you hit record
 
-1. Run `supabase db reset` to get a clean seed state.
-2. Run `pnpm dev`.
-3. Open [http://localhost:3000](http://localhost:3000) in Chrome, zoom to 110 % so text is legible.
-4. Open Supabase Studio ([http://127.0.0.1:54323](http://127.0.0.1:54323)) in a second tab — you may want to cut to it briefly when showing database state.
-5. The active persona at startup will be whoever was last persisted to localStorage. Set it to **Mihir Jain** before recording.
+1. **`supabase db reset`** — clean seed state (0 bookings; Lab-A free; fairness drift: Tariq over-served, Ana under-served).
+2. **`pnpm dev`**, then open **http://localhost:3000** in Chrome; zoom to ~110 % for legibility.
+3. (Optional) Open Supabase Studio (**http://127.0.0.1:54323**) in a second tab to cut to the `audit_log` table.
+4. **Set the persona to `Mihir Jain — student`** using the dropdown in the top-right of the header before recording. (The header also has nav links: Home · Me · Admin · Demo.)
+
+**Slot picker legend (important):** slots are **1-hour**. **White** = free (click to select). **Amber** = already booked — *still clickable*; selecting it submits a **competing request** the engine will arbitrate. Past slots are not shown.
 
 ---
 
-## Shot 1 — Discovery and Resource Grid (0:00–0:35)
+## Shot 1 — Discovery & Resource Grid (0:00–0:30)
 
 **Persona:** Mihir Jain (year-1 student)
 
-**What to show:**
-- The SYNAPSE header with the persona switcher showing "Mihir Jain" in the top right.
-- The resource grid on `/` — eight cards: Lab-A, Lab-B, two meeting rooms, AV Studio, VR Kit, Oscilloscope Bench, 3D Printer.
-- Apply the **Computer Lab** filter. Grid narrows to Lab-A and Lab-B.
-- Hover Lab-A to show capacity (30 seats, dual-monitor + GPU, Block A).
+**Show:**
+- The **SYNAPSE** header; persona switcher reads "Mihir Jain — student" with a "Student" badge.
+- The resource grid on `/` — 8 cards: Lab-A, Lab-B, Meeting Room 1 & 2, AV Studio, VR Kit, Oscilloscope Bench, 3D Printer.
+- Use the **class filter** → choose **Computer Lab** → grid narrows to Lab-A and Lab-B.
+- Note Lab-A's card: Block A, 30 seats, equipment chips (dual-monitor, GPU).
 
 **Narration:**
-> "SYNAPSE gives every university community member a live view of all shared resources. I'm logged in as Mihir, a first-year student. I can filter by type, building, or capacity. Let me narrow to computer labs and head into Lab-A."
+> "SYNAPSE gives the whole campus a live view of shared resources. I'm Mihir, a first-year student. I can filter by type, building, or capacity — let me narrow to computer labs and open Lab-A."
 
 ---
 
-## Shot 2 — Mihir Books Lab-A (0:35–1:10)
+## Shot 2 — Mihir Books a Free Slot (0:30–1:05)
 
 **Persona:** Mihir Jain
 
-**What to show:**
-- Click Lab-A to navigate to `/resources/[id]`.
-- The slot picker: a week grid of 2-hour slots. Available slots are bright; booked slots are dimmed/disabled.
-- Click any available slot (e.g. Tuesday 14:00–16:00).
-- The booking form slides open. Type "lab session" in the Purpose field.
+**Show:**
+- Click Lab-A → `/resources/[id]`. Header shows "Computer Lab · Block A · 30 seats".
+- In **Book a slot**, pick any **white (free)** 1-hour slot a day or two out — e.g. **Tue 14:00**. It turns cyan; a "Selected: …" line appears.
+- Type **`casual study`** in **Purpose (optional)**.
 - Click **Request booking**.
-- The Decision Modal opens. Heading reads **Booking Confirmed**. Score bars are visible: Urgency, Role weight (low — Mihir is a year-1 undergrad), Fairness deficit (near zero), Recency penalty, Academic purpose.
-- Close the modal.
+- The **Decision** modal opens: heading **✓ Confirmed**. Under "Allocated to", Mihir's score bars: Urgency (full), Role weight (low — year-1), Fairness deficit (he's been moderately under-served), Recency penalty (none), Academic purpose (0 — "casual study" doesn't match an academic keyword). Close it.
 
 **Narration:**
-> "I pick Tuesday 14:00 and submit. The engine scores my request instantly — I'm a first-year, so my role weight is low and I have no fairness history yet. The slot is free, so I'm confirmed. Notice the score breakdown: every component is transparent."
+> "Mihir picks Tuesday at 2 PM. The engine scores his request live — first-year, so a low role weight, and no academic-purpose match. The slot's free, so he's confirmed. Notice every score component is shown — nothing is a black box."
 
 ---
 
-## Shot 3 — Sarah Conflicts and Wins by Priority (1:10–1:55)
+## Shot 3 — Sarah Contends the Same Slot & Wins by Priority (1:05–1:55) ⭐
 
-**Persona:** Switch to **Sarah Fernando** (final-year, capstone project)
+**Persona:** Switch to **Sarah Fernando — student** (final-year, capstone)
 
-**What to show:**
-- Open the persona switcher dropdown. Select "Sarah Fernando". The header updates.
-- Stay on Lab-A (`/resources/[id]`) or navigate back to it.
-- Click the **same Tuesday 14:00 slot** that Mihir just booked (it should now show as busy/Mihir's).
-- Type "capstone project" in the Purpose field.
+**Show:**
+- Open the persona dropdown → select **Sarah Fernando**. Header + badge update.
+- Still on Lab-A. The **Tue 14:00** slot Mihir just booked is now **amber** (booked). **Click it anyway** — amber slots are contendable. It selects (cyan).
+- Type **`capstone project`** in Purpose.
 - Click **Request booking**.
-- The Decision Modal opens. Heading reads **Booking Confirmed by Priority**.
-- Show the winner card (Sarah, score ~0.73) and the contender card (Mihir, score ~0.31) side by side.
-- Expand the score bars: Sarah's Role weight bar is taller (0.80 vs 0.40); her Fairness deficit bar is high (she was under-served); her Academic purpose bar is full (keyword "capstone" matched computer lab).
-- Scroll to the Counterfactuals section: two alternate slots for Mihir are listed (e.g. "Lab-A Wed 10:00" and "Lab-B Tue 14:00") with their scores.
-- Close the modal.
+- The **Decision** modal opens: heading **✓ Confirmed by priority**.
+  - **Allocated to: Sarah** — total ≈ **0.73**. Bars: Role weight 0.80 (final-year), Fairness deficit ≈ 0.62 (under-served), Academic purpose 1.0 ("capstone" matches a computer-lab purpose).
+  - **Contender: Mihir** — total ≈ **0.56**. Lower role weight (0.40), no academic-purpose match.
+  - **Counterfactuals**: two alternatives are suggested (a later Lab-A slot and Lab-B) with their scores — so the displaced user isn't stranded.
+- Close. (Mihir has been atomically demoted to the waitlist for that slot.)
 
 **Narration:**
-> "Now I switch to Sarah — a final-year student working on her capstone thesis. She requests the same slot. The engine scores both parties: Sarah's combined score is 0.73; Mihir's is 0.31. Sarah wins on role weight AND fairness — she's been historically under-served. Mihir is automatically waitlisted at rank 1, and the explainer suggests two alternate slots he could book instead. No one is left in the dark."
+> "Now I'm Sarah — final-year, working on her capstone. She requests the *same* slot. The engine scores both: Sarah 0.73, Mihir 0.56. Sarah wins on role weight, fairness — she's been under-served — and a matching academic purpose. Mihir is automatically waitlisted, and the explainer even suggests two alternatives. Every decision is transparent and contestable."
 
 ---
 
-## Shot 4 — N-way Contention Simulation on /demo (1:55–2:35)
+## Shot 4 — N-way Contention on /demo: fairness can outrank seniority (1:55–2:35) ⭐
 
-**Persona:** Any (System Admin is fine)
+**Persona:** any (System Admin is fine)
 
-**What to show:**
-- Navigate to `/demo`.
-- The contention control room: a resource selector and a member checklist.
-- From the resource dropdown, select **Lab-A**.
-- The member checkboxes load. Sarah, Mihir, and Dr. Perera are pre-checked.
-- Click **Fire simultaneous requests**.
-- The button shows a loading state for 1–2 seconds, then results appear.
-- The Winner card shows **Dr. Perera** (faculty, score ~0.55+) with cyan background.
-- Below: "All contenders (ranked)" — Sarah at #1, Mihir at #2, with their score bars.
-- Point out that the result is order-independent: no matter how many times you fire, the same person wins.
+> **⚠️ Reset before this shot.** The `/demo` winner is computed from the **live fairness ledger**. After the booking shots above, fairness has drifted — and in a drifted state Dr. Perera (faculty, pure role weight) can win. For the scripted "fairness beats seniority" beat, run **`supabase db reset`** first (and refresh the tab) so the fairness ledger is in its seeded state (Sarah's deficit ≈ 0.62). This shot is self-contained — it doesn't depend on the earlier bookings, so a clean reset here is fine (cut to it in editing).
+
+**Show:**
+- Go to **`/demo`** (the contention control room).
+- Resource dropdown → **Lab-A**. Pick a slot (the defaults are fine).
+- Member checklist: keep **Sarah, Mihir, and Dr. Perera** checked (Dr. Perera is faculty).
+- Click **Fire simultaneous requests** (button shows "Simulating…").
+- Results (on clean seed): **Winner — Sarah Fernando ≈ 0.68** (cyan card). Ranked contenders, **each shown with its name**: **#1 Mihir Jain ≈ 0.56**, **#2 Dr. Perera ≈ 0.55**.
+- Re-fire a couple of times to show the winner never changes — order-independent.
+
+> If you'd rather *not* reset, that's fine — just narrate whoever actually wins. The point of this shot is the **order-independent, transparent, multi-factor arbitration**; "fairness outranking faculty" is the bonus you get on the seeded state.
 
 **Narration:**
-> "The demo control room lets us simulate N simultaneous requests. I fire Sarah, Mihir, and Dr. Perera at the same slot at once. The engine scores all three, picks the winner by priority — Dr. Perera, faculty, role weight 1.0 — and ranks the rest. Same result every time, regardless of who clicked first. This is the 'deterministic winner by priority, not arrival time' guarantee."
+> "The control room fires several requests at one slot simultaneously. Watch what happens: the faculty member, Dr. Perera, has the highest role weight — but he *loses*. Sarah, an under-served final-year student, wins because her fairness deficit tips the balance. Fairness is a first-class factor, not an afterthought — and the result is deterministic by score, not by who clicked first."
+
+*(Note: the simulation scores raw role + fairness + urgency — it doesn't apply an academic-purpose bonus — which is why these totals differ slightly from Shot 3.)*
 
 ---
 
-## Shot 5 — Admin Console: Fairness, Policy, and Ops (2:35–3:20)
+## Shot 5 — Admin Console: Fairness, Open Policy, Ops (2:35–3:20)
 
-**Persona:** Switch to **System Admin**
+**Persona:** Switch to **System Admin** (or Nimal — Lab Manager)
 
-**What to show:**
+**Show:**
 
-**Fairness tab (default):**
-- Navigate to `/admin`. "Admin console" heading confirms access.
-- The Fairness Dashboard table. Point out **Tariq (over-served)**: served hours are well above fair share, fairness term ≈ 0. Point out **Ana (under-served)**: served hours below fair share, fairness term close to 1.0 (bright bar).
+**Fairness tab** (`/admin` → "Admin console"):
+- The fairness dashboard, grouped by resource class. For **Computer Lab**: **Tariq (over-served)** — served hours far above fair share, fairness term ≈ **0.00**; **Ana (under-served)** — well below fair share, fairness term ≈ **0.81** (tall bar). Sarah/Mihir sit around 0.62.
 
-**Policy tab:**
-- Click the **Policy** tab.
-- Slide the γ (Fairness weight) slider from 0.30 to 0.40. Click **Save**.
-- A success toast confirms the change. The new weight is live for all subsequent bookings.
+**Policy tab** ("Open Policy"):
+- Find **Fairness weight (γ)** (a **numeric input**, currently **0.30**). Change it to **0.40** → click **Save**. Toast: **`Saved "Fairness weight (γ)" → 0.4`**. Weights are data, not code — live for the next booking.
 
 **Ops tab:**
-- Click the **Ops** tab.
-- Click **Run rebalance**. Toast: "Rebalance complete — N members updated."
-- Click **Run reaper**. Toast: "Reaper complete — N no-shows released, M promoted."
-- Briefly note: in production these would run on a `pg_cron` schedule; for the demo they are manual.
+- Click **Run rebalance** → toast **`Fairness rebalance complete`**; a JSON report card appears below (per-member fairness terms).
+- Click **Run reaper** → toast **`No-show reaper complete`** with its JSON result.
+- (Mention: in production these run on a `pg_cron` schedule; here they're button-triggered so you can show them live.)
 
 **Narration:**
-> "The admin console gives lab managers full visibility. The Fairness tab shows who's over-served and who's been squeezed out — Tariq has used 16 hours of Lab-A in 30 days; Ana has had 1. I can tune the fairness weight live — raising γ means Ana's next request will score significantly higher. Running the rebalance recalculates everyone's fairness term; running the reaper marks unchecked-in sessions as no-shows and auto-promotes their waitlisted replacements."
+> "Lab managers get full visibility. The fairness dashboard shows who's monopolised resources — Tariq — and who's been squeezed out — Ana, fairness term 0.81. Weights are open policy: I raise the fairness weight live, and the next allocation reflects it immediately. Rebalance recomputes every member's fairness term over the window; the reaper releases no-shows and auto-promotes their waitlisted replacements."
 
 ---
 
-## Shot 6 — Cancel a Booking and Watch Auto-Promote (3:20–3:50)
+## Shot 6 — Cancel → Smart-Waitlist Auto-Promote (3:20–3:50) ⭐
 
-**Persona:** Switch back to **Mihir Jain** (who was waitlisted in Shot 3)
+**Persona:** **Sarah Fernando** (who won the Tue 14:00 slot in Shot 3)
 
-**What to show:**
-- Navigate to `/me` (My Bookings).
-- Mihir's waitlist entry for Lab-A Tuesday 14:00 is visible with rank 1.
-- Switch to **Sarah Fernando** so we can cancel her confirmed booking.
-- On `/me`, find the confirmed booking for Lab-A Tuesday 14:00.
-- Click **Cancel**.
-- A confirmation dialog appears. Confirm the cancellation.
-- A toast appears confirming the cancellation: "Booking cancelled." The auto-promotion happens server-side inside the cancel RPC — its effect is visible on the resource page and in the admin audit log, not in this toast.
-- Switch back to **Mihir Jain** and navigate to `/me`.
-- Mihir now has a **confirmed** booking for the slot (waitlist entry is gone or status shows "promoted") — proof the auto-promote fired.
+**Show:**
+- Go to **`/me`**. Sarah has the confirmed **Lab-A Tue 14:00** booking.
+- Click **Cancel** → AlertDialog "Cancel booking?" → confirm with **Cancel booking**.
+- Toast: **`Booking cancelled`**. (The auto-promotion happens server-side inside the cancel RPC; its effect shows on the resource page / audit log, not in the toast.)
+- Switch to **Mihir Jain** → `/me`. Mihir now holds a **confirmed** Lab-A Tue 14:00 booking — his waitlist entry was auto-promoted. (You can also open Lab-A to see it's his again, or Studio's `audit_log`.)
 
 **Narration:**
-> "When Sarah cancels, the engine immediately promotes the top-ranked waiter — Mihir — to a confirmed booking. No admin action needed; it's atomic inside the cancel RPC. Mihir gets his slot back without re-submitting. This is the smart waitlist in action."
+> "When Sarah cancels, the engine instantly promotes the top-ranked waiter — Mihir — to a confirmed booking, atomically inside the cancel. No admin action, no re-submitting. That's the smart waitlist closing the loop."
 
 ---
 
-## Closing Frame (3:50–4:00)
+## Closing (3:50–4:00)
 
-**What to show:**
-- Return to `/` with the full resource grid visible.
-- SYNAPSE header with the team name or a brief title card overlay.
+- Return to `/` with the full grid visible.
 
 **Narration:**
-> "SYNAPSE: conflict-free by construction, transparent by design, fair by algorithm. Built for CIPHER 2.0 by Segfault Society."
+> "SYNAPSE — conflict-free by construction, transparent by design, fair by algorithm. Built for CIPHER 2.0 by Segfault Society."
 
 ---
 
-## Recording Tips
+## Recording tips
 
-- Narrate live or record voice-over in post — both work.
-- Use the browser's built-in zoom (Cmd/Ctrl +) to ensure all text is readable at 1080p.
-- If a toast disappears too quickly, pause the recording and re-trigger the action.
-- The Decision Modal score bars animate on open — let them finish before narrating.
-- Total target: 3:30–4:00. Do not exceed 5 minutes.
+- Narrate live or voice-over in post.
+- Use browser zoom so text is readable at 1080p.
+- If a toast vanishes too fast, pause and re-trigger.
+- Pick demo slots **within ~2 days** so the scores match the numbers above (urgency = 1.0).
+- If anything gets into a messy state between takes, run **`supabase db reset`** to restore the clean canvas.
+- Keep it under 5 minutes; 3:30–4:00 is the sweet spot.

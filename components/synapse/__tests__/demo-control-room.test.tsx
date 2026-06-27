@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 import { DemoControlRoom } from "@/components/synapse/demo-control-room";
@@ -63,6 +63,15 @@ const simulationResult = {
       role: "student",
       score: 0.72,
       components: makeScoreComponents({ urgency: 0.5 }),
+      rank: 1,
+    },
+    {
+      member_id: drPerera.id,
+      name: drPerera.full_name,
+      role: "faculty",
+      score: 0.65,
+      components: makeScoreComponents({ urgency: 0.3 }),
+      rank: 2,
     },
   ],
   counterfactuals: [],
@@ -232,6 +241,18 @@ describe("DemoControlRoom", () => {
     expect(screen.getAllByText("Urgency").length).toBeGreaterThan(0);
     // Contender shown (may appear in both results card and persona list)
     expect(screen.getAllByText("Mihir Patel").length).toBeGreaterThan(0);
+
+    // Ranked-contenders section renders each contender's NAME next to its rank
+    // (regression guard for the bug where contenders showed only "#1"/"#2").
+    const rankedHeading = screen.getByText("All contenders (ranked)");
+    const rankedSection = rankedHeading.parentElement as HTMLElement;
+    const ranked = within(rankedSection);
+    // rank markers
+    expect(ranked.getByText("#1")).toBeInTheDocument();
+    expect(ranked.getByText("#2")).toBeInTheDocument();
+    // member names rendered in the ranked list (not just "#1"/"#2")
+    expect(ranked.getByText("Mihir Patel")).toBeInTheDocument();
+    expect(ranked.getByText("Dr. Perera")).toBeInTheDocument();
   });
 
   it("l) error path — rpc error shows toast", async () => {
