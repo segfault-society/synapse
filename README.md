@@ -122,7 +122,7 @@ Follow these steps after `supabase db reset && pnpm dev`:
 | F-09 | Demand forecasting (Holt-Winters) | **Cut** — stretch goal; not implemented |
 | F-10 | Fairness dashboard | `/admin` Fairness tab — served vs. fair-share bars per member/class |
 | F-11 | Audit log viewer | `/admin` Audit tab — reverse-chronological, expandable explainers |
-| F-12 | Open policy editor | `/admin` Policy tab — live α/β/γ/δ/ε sliders + role weights; `update_policy` RPC |
+| F-12 | Open policy editor | `/admin` Policy tab — live α/β/γ/δ/ε numeric inputs + role weights; `update_policy` RPC |
 
 ---
 
