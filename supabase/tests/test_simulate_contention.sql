@@ -10,5 +10,10 @@ begin
   assert out->'winner'->>'name' = 'Fac', 'faculty must win by score, got '||(out->'winner'->>'name');
   assert (select count(*) from public.bookings where resource_id=r and status='confirmed' and during && tstzrange(s,e,'[)')) = 1, 'one winner confirmed';
   assert (select count(*) from public.waitlists where resource_id=r and status='waiting' and during && tstzrange(s,e,'[)')) = 1, 'loser waitlisted';
+  -- every contender must carry a non-null name (so the /demo ranked list shows names)
+  assert not exists (
+    select 1 from jsonb_array_elements(out->'contenders') c
+    where c->>'name' is null or c->>'name' = ''
+  ), 'every contender must have a non-null name';
   raise notice 'SIMULATE_CONTENTION TESTS PASSED';
 end $$;
