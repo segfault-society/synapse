@@ -49,8 +49,10 @@ export async function clickFirstFreeSlot(page: Page): Promise<string> {
     const btn = allSlotButtons.nth(i);
     const isDisabled = await btn.getAttribute("disabled");
     const ariaLabel = await btn.getAttribute("aria-label");
-    // Skip if HTML disabled attribute present, or aria-label contains "(busy)"
-    if (isDisabled !== null || (ariaLabel && ariaLabel.includes("(busy)"))) {
+    // Skip if HTML disabled present, or the slot is already booked. Booked
+    // slots are now contendable (no `disabled` attr) and carry "(booked …" in
+    // their aria-label, so match that to find a genuinely FREE slot.
+    if (isDisabled !== null || (ariaLabel && ariaLabel.includes("(booked"))) {
       continue;
     }
     targetLabel = ariaLabel;
@@ -64,6 +66,41 @@ export async function clickFirstFreeSlot(page: Page): Promise<string> {
   // Click by exact aria-label using attribute selector
   await page.locator(`button[aria-label="${targetLabel}"]`).click();
   return targetLabel;
+}
+
+/**
+ * Pick a deterministic free slot "a few days out" so two separate test runs
+ * (Mihir then Sarah) target the SAME slot. Strategy: collect every free
+ * (non-booked) slot label in DOM order and return the one at `index`.
+ *
+ * After Mihir books a slot it becomes amber/booked (aria-label contains
+ * "(booked"), so Sarah must NOT use this helper to find it — she clicks the
+ * exact label string captured from Mihir's run instead.
+ *
+ * Returns the aria-label of the slot at the given index among free slots.
+ */
+export async function pickFreeSlotLabel(page: Page, index = 0): Promise<string> {
+  await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+
+  const allSlotButtons = page.locator("button[aria-label]");
+  await expect(allSlotButtons.first()).toBeVisible({ timeout: 10000 });
+
+  const count = await allSlotButtons.count();
+  const freeLabels: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const ariaLabel = await allSlotButtons.nth(i).getAttribute("aria-label");
+    if (!ariaLabel) continue;
+    // Free slots have a plain time-range label; booked ones include "(booked".
+    if (ariaLabel.includes("(booked")) continue;
+    freeLabels.push(ariaLabel);
+  }
+
+  if (freeLabels.length <= index) {
+    throw new Error(
+      `Need a free slot at index ${index} but only found ${freeLabels.length}`,
+    );
+  }
+  return freeLabels[index];
 }
 
 /**

@@ -133,12 +133,14 @@ export function SlotPicker({ resourceId, onSelect, selected }: SlotPickerProps) 
 
               let slotClass =
                 "text-xs px-2.5 py-1 rounded border font-mono transition-colors ";
-              if (busy) {
-                slotClass +=
-                  "bg-muted text-muted-foreground border-border cursor-not-allowed opacity-50";
-              } else if (isSelected) {
+              if (isSelected) {
                 slotClass +=
                   "bg-cyan-500 text-white border-cyan-500 cursor-pointer";
+              } else if (busy) {
+                // Booked slots stay clickable so a higher-priority request can
+                // contend them. Amber signals "already booked" without locking.
+                slotClass +=
+                  "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 cursor-pointer hover:border-amber-400";
               } else {
                 slotClass +=
                   "bg-background text-foreground border-border hover:border-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950 cursor-pointer";
@@ -148,11 +150,10 @@ export function SlotPicker({ resourceId, onSelect, selected }: SlotPickerProps) 
                 <button
                   key={start.toISOString()}
                   type="button"
-                  disabled={busy}
                   className={slotClass}
-                  onClick={() => !busy && onSelect(start, end)}
+                  onClick={() => onSelect(start, end)}
                   aria-pressed={!!isSelected}
-                  aria-label={`${formatDate(start)} ${formatTime(start)}–${formatTime(end)}${busy ? " (busy)" : ""}`}
+                  aria-label={`${formatDate(start)} ${formatTime(start)}–${formatTime(end)}${busy ? " (booked — your request will contend)" : ""}`}
                 >
                   {formatTime(start)}
                 </button>
@@ -161,6 +162,12 @@ export function SlotPicker({ resourceId, onSelect, selected }: SlotPickerProps) 
           </div>
         </div>
       ))}
+      {allSlots.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          <span className="inline-block h-2 w-2 rounded-sm bg-amber-300 align-middle mr-1" />
+          Amber = already booked — selecting it contends the slot by priority.
+        </p>
+      )}
       {allSlots.length === 0 && (
         <p className="text-sm text-muted-foreground">No available slots in the next {DAYS_AHEAD} days.</p>
       )}

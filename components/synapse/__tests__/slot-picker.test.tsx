@@ -80,7 +80,7 @@ describe("SlotPicker", () => {
     expect(nineOClock).toBeDefined();
   });
 
-  it("b) a slot overlapping a confirmed booking is disabled and click does not call onSelect", async () => {
+  it("b) a slot overlapping a confirmed booking is NOT disabled, is marked booked/contendable, and clicking it DOES call onSelect", async () => {
     // Cover ALL first-day business hours across both UTC and UTC+14 offsets to ensure
     // at least one slot in the generated set matches this busy interval.
     // Busy: June 24 00:00 UTC through June 25 18:00 UTC — covers the full first
@@ -94,23 +94,33 @@ describe("SlotPicker", () => {
     await act(async () => {});
 
     const allButtons = screen.getAllByRole("button");
-    const disabledButtons = allButtons.filter((btn) => btn.hasAttribute("disabled"));
+    // Booked slots are now identified by their "(booked …" aria-label, NOT by
+    // a disabled attribute — they must stay clickable so a higher-priority
+    // request can contend the slot through the booking UI.
+    const busyButtons = allButtons.filter((btn) =>
+      btn.getAttribute("aria-label")?.includes("(booked"),
+    );
 
-    // At least one slot should be disabled (overlap with the wide busy interval)
-    expect(disabledButtons.length).toBeGreaterThan(0);
+    // At least one slot should overlap the wide busy interval
+    expect(busyButtons.length).toBeGreaterThan(0);
 
-    const busyButton = disabledButtons[0];
+    const busyButton = busyButtons[0];
 
-    // Assert the button is marked disabled in the DOM so the UI correctly
-    // communicates unavailability to assistive technology.
-    expect(busyButton).toBeDisabled();
+    // It must NOT be disabled (contendable), and must carry the amber/booked styling.
+    expect(busyButton).not.toBeDisabled();
+    expect(busyButton.getAttribute("aria-label")).toContain(
+      "(booked — your request will contend)",
+    );
+    expect(busyButton.className).toContain("amber");
 
     // Use .click() directly rather than userEvent because userEvent v14+ has an
     // internal pointer-delay that conflicts with vi.useFakeTimers(), causing
-    // the click to hang.  The component guards onSelect behind !busy, so the
-    // native .click() is sufficient to verify the guard holds.
+    // the click to hang.
     busyButton.click();
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    const [start, end] = onSelect.mock.calls[0] as [Date, Date];
+    expect(start).toBeInstanceOf(Date);
+    expect(end).toBeInstanceOf(Date);
   });
 
   it("c) clicking a free slot calls onSelect with two Date objects", async () => {

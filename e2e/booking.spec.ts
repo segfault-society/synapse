@@ -1,8 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { switchPersona, goToLabA, clickFirstFreeSlot } from "./helpers";
+import { switchPersona, goToLabA, pickFreeSlotLabel } from "./helpers";
 
 test.describe.serial("Booking flow", () => {
-  test("Test A — Mihir books Lab-A, modal shows Confirmed", async ({ page }) => {
+  // Shared across the serial tests: the exact slot Mihir books, which Sarah
+  // then contends. Both tests run within seconds of each other, so the
+  // relative slot generation produces the identical label set.
+  let contendedSlotLabel: string;
+
+  test("Test A — Mihir books a Lab-A slot, modal shows Confirmed", async ({ page }) => {
     // 1. Switch to Mihir
     await page.goto("/");
     await switchPersona(page, "Mihir Jain");
@@ -10,11 +15,13 @@ test.describe.serial("Booking flow", () => {
     // 2. Navigate to Lab-A
     await goToLabA(page);
 
-    // 3. Pick first free slot (helper waits for busy-state fetch to complete)
-    await clickFirstFreeSlot(page);
+    // 3. Pick a deterministic free slot a few days out (so Sarah can target the
+    //    same one). Index 30 lands ~3 business days out, well clear of "now".
+    contendedSlotLabel = await pickFreeSlotLabel(page, 30);
+    await page.locator(`button[aria-label="${contendedSlotLabel}"]`).click();
 
     // 4. Enter a purpose
-    await page.locator("#purpose").fill("Test booking Mihir");
+    await page.locator("#purpose").fill("casual study");
 
     // 5. Click Request booking
     await page.getByRole("button", { name: "Request booking" }).click();
@@ -29,7 +36,7 @@ test.describe.serial("Booking flow", () => {
     await expect(dialog).not.toBeVisible({ timeout: 5000 });
   });
 
-  test("Test B — Sarah books a different Lab-A slot, gets Confirmed", async ({ page }) => {
+  test("Test B — Sarah contends Mihir's SAME slot → Confirmed by priority", async ({ page }) => {
     // Fresh page, switch to Sarah
     await page.goto("/");
     await switchPersona(page, "Sarah Fernando");
@@ -37,45 +44,34 @@ test.describe.serial("Booking flow", () => {
     // Navigate to Lab-A
     await goToLabA(page);
 
-    // Wait for busy state to load (networkidle settles the Supabase fetch)
+    // Wait for busy state to load — Mihir's slot should now render as amber/booked.
     await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
 
-    // Click the SECOND free slot (to avoid the slot Mihir just booked).
-    // Use iteration approach to avoid stale-element races. Web-first assertion
-    // (replaces fixed sleep): wait until at least one FREE (non-disabled) slot
-    // is visible — busy slots carry the HTML `disabled` attr.
-    const allSlotButtons = page.locator("button[aria-label]");
-    await expect(allSlotButtons.first()).toBeVisible({ timeout: 10000 });
-    await expect(
-      page.locator("button[aria-label]:not([disabled])").first()
-    ).toBeVisible({ timeout: 10000 });
+    // The slot Mihir booked is now "(booked — your request will contend)".
+    // Its aria-label is Mihir's plain label + the booked suffix.
+    const bookedLabel = `${contendedSlotLabel} (booked — your request will contend)`;
+    const bookedButton = page.locator(`button[aria-label="${bookedLabel}"]`);
+    await expect(bookedButton).toBeVisible({ timeout: 10000 });
 
-    const count = await allSlotButtons.count();
-    const freeLabels: string[] = [];
-    for (let i = 0; i < count; i++) {
-      const btn = allSlotButtons.nth(i);
-      const isDisabled = await btn.getAttribute("disabled");
-      const ariaLabel = await btn.getAttribute("aria-label");
-      if (isDisabled !== null || (ariaLabel && ariaLabel.includes("(busy)"))) continue;
-      if (ariaLabel) freeLabels.push(ariaLabel);
-      if (freeLabels.length >= 2) break;
-    }
+    // Sarah clicks the SAME (now booked/contendable) slot — impossible before the fix.
+    await bookedButton.click();
 
-    if (freeLabels.length < 1) throw new Error("No free slots available for Sarah's booking");
-    // Pick the last found free slot (may or may not be the second, but definitely different from Mihir's)
-    const targetLabel = freeLabels[freeLabels.length - 1];
-    await page.locator(`button[aria-label="${targetLabel}"]`).click();
-
-    // Enter purpose
-    await page.locator("#purpose").fill("Test booking Sarah");
+    // Enter a high-priority purpose
+    await page.locator("#purpose").fill("capstone project");
 
     // Submit
     await page.getByRole("button", { name: "Request booking" }).click();
 
-    // Assert modal shows Confirmed (or Confirmed by priority — Sarah is under-served)
+    // Assert modal shows "Confirmed by priority" (Sarah outscores Mihir →
+    // priority override demotes Mihir to the waitlist).
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible({ timeout: 15000 });
-    await expect(dialog.getByRole("heading")).toContainText(/Confirmed/i, { timeout: 10000 });
+    await expect(dialog.getByRole("heading")).toContainText("Confirmed by priority", {
+      timeout: 10000,
+    });
+
+    // And a contender (Mihir) is shown in the explainer.
+    await expect(dialog.getByText(/Mihir/i).first()).toBeVisible({ timeout: 10000 });
 
     // Close (footer button, not the X icon)
     await dialog.getByRole("button", { name: "Close" }).first().click();
